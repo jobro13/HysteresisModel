@@ -1,6 +1,7 @@
 local Lattice = {}
 
 Lattice.ExternalField=0; -- This is the external field strength.
+Lattice.J = 1;
 
 function Lattice:new()
 	return setmetatable({}, {__index=self})
@@ -135,7 +136,7 @@ function Lattice:GetEnergyAt(x,y,z,targ, flip)
 	end
 
 	local Uint=U_intern(Current,self.Temperature);
-	Uint=-Current*self.ExternalField;
+	Uint=Current*self.ExternalField;
 	--print(Uinteract, Uint)
 	-- All terms are negative.
 	--print("state " .. Current .. " intern " .. Uint .. " interact " .. Uinteract)
@@ -144,11 +145,18 @@ function Lattice:GetEnergyAt(x,y,z,targ, flip)
 end 
 
 function Lattice:GetDeltaU(x,y,z,targ)
-	local UNew,UinteractNew,UintNew = self:GetEnergyAt(x,y,z,targ,true)
-	local UOld,UinteractOld,UintOld = self:GetEnergyAt(x,y,z,(targ and -targ),false)
+	--local UNew,UinteractNew,UintNew = self:GetEnergyAt(x,y,z,targ,true)
+	--local UOld,UinteractOld,UintOld = self:GetEnergyAt(x,y,z,(targ and -targ),false)
+	--local dU = UNew-UOld;
 
-	local dU = UNew-UOld;
-	print(dU,self.Temperature)
+	local STATE = self.Grid[x][y][z];
+	local NEIGHBOUR_SUM = 0;
+	for _,Neighbour in pairs(self:GetNeighbours(x,y,z)) do 
+		NEIGHBOUR_SUM = NEIGHBOUR_SUM + self.Grid[Neighbour[1]][Neighbour[2]][Neighbour[3]];
+	end 
+
+	local dU = 2*STATE*NEIGHBOUR_SUM*self.J + 2 * STATE * self.ExternalField;
+	--print(dU,self.Temperature)
 	return dU;
 	--[[local UNew,UinteractNew,UintNew = self:GetEnergyAt(x,y,z,targ,true)
 	local UOld,UinteractOld,UintOld = self:GetEnergyAt(x,y,z,(targ and -targ),false)

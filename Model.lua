@@ -20,12 +20,18 @@ function Model:Run(paramlist)
 	local Results = {};
 
 	local index=0;
-	local sumof=0; 
-	local numof=0;
-	for _,Temperature in pairs(paramlist) do 
-		self:SetModelParam(Temperature);
-		sumof=self.Lattice:GetM();
-		numof=1;
+	local test 
+	for i,v in pairs(paramlist) do 
+		test = i 
+		break 
+	end 
+
+	for i = 1, #paramlist[test] do 
+		local input = {} 
+		for ind, val in pairs(paramlist) do 
+			input[ind] = val[i]
+		end 
+		self:SetModelParam(input);
 		for Sweep=1,self.Sweeps*Volume do 
 			local tx,ty,tz = self.Lattice:GetRandomLatticeSite();
 			DeltaU = self.Lattice:GetDeltaU(tx,ty,tz);
@@ -36,15 +42,14 @@ function Model:Run(paramlist)
 				--print(DeltaU, self.Lattice.Temperature)
 				if math.random() < math.exp(-DeltaU/self.Lattice.Temperature) then
 					self.Lattice:SetSpin(tx,ty,tz,-self.Lattice.Grid[tx][ty][tz])
-					sumof = sumof +self.Lattice:GetM();
-					numof=numof+1;
 				end;
 			end 
 		end 
-		table.insert(Results, sumof/numof)
+		local sumof=self.Lattice:GetM();
+		table.insert(Results, sumof)
 		index=index+1;
 
-		if self.Callback then self.Callback(index,#self.TemperatureList) end;
+		if self.Callback then self.Callback(index,#paramlist) end;
 	end
 	return Results;
 end 
