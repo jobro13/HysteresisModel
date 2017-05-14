@@ -1,5 +1,5 @@
 function  PlotData( fname )
-close all;
+%close all;
 %Plot data from a lua-generated data file. The data file is generated with DataSet.lua
 %The format is as following: 
 % xlabel1 

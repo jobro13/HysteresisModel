@@ -37,7 +37,7 @@ function GetResults()
 		if chance > 1 then
 			chance =1;
 		end
-		print("There are " .. NumFlip .. " neighbours DOWN, target is DOWN, chance is " .. chance)
+		--print("There are " .. NumFlip .. " neighbours DOWN, target is DOWN, chance is " .. chance)
 		table.insert(out.FlipDown, chance)
 
 
@@ -49,7 +49,7 @@ function GetResults()
 			chance =1;
 		end
 
-		print("There are " .. NumFlip .. " neighbours DOWN, target is UP, chance is " .. chance)
+		--print("There are " .. NumFlip .. " neighbours DOWN, target is UP, chance is " .. chance)
 		table.insert(out.FlipUp, chance)
 
 	end 
@@ -58,7 +58,7 @@ function GetResults()
 	return out;
 end 
 
-local function linspace(startn, step, endn)
+local function stepspace(startn, step, endn)
 	local out = {};
 	for i=startn,endn,step do 
 		table.insert(out,i)
@@ -66,8 +66,28 @@ local function linspace(startn, step, endn)
 	return out;
 end 
 
-TempSweep = linspace(1,0.1,6);
-FieldSweep = linspace(1,0.1,6);
+local function linspace(startn,num,endn)
+	local step = (endn-startn) / (num-1);
+	local out = {}
+
+	for i = 1, num do 
+		local val = startn + (i-1)*step 
+		table.insert(out, val) 
+	end 
+	return out
+end 
+
+
+Test.J = 1;
+
+Tc = 2*Test.J / (math.log(1+math.sqrt(2)));
+
+
+TempSweep = stepspace(Tc-0.1,0.001,Tc+0.1);
+
+local Field = -1;
+
+FieldSweep = linspace(Field,#TempSweep, -Field);
 
 DUp = {};
 DDown = {};
@@ -75,9 +95,9 @@ DDown = {};
 --TempSweep = {1}
 
 for i,Temperature in pairs(TempSweep) do 
-	Field = FieldSweep[i];
+	local LeField = FieldSweep[i];
 	Test.Temperature = Temperature;
-	Test.ExternalField = 0;
+	Test.ExternalField = LeField;
 
 	local Out = GetResults();
 
