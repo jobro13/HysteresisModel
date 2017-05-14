@@ -89,13 +89,13 @@ local U_formation_metal = 0;
 local U_slope_insulator=0;
 local U_slope_metal=0;
 
-local U_Interaction_Amplitude =2;
+local U_Interaction_Amplitude =1;
 
 -- High temperature, Low temperature state temperatures;
 local THigh = 360;
 local TLow = 300;
 
-local EnergyMultiplier = THigh/10;
+local EnergyMultiplier = 1;--THigh/10;
 
 -- Energy difference between both states.
 local Energy_Delta_Transition = 120;
@@ -131,21 +131,24 @@ function Lattice:GetEnergyAt(x,y,z,targ, flip)
 
 	local Uinteract = 0;
 	for _,Neighbour in pairs(self:GetNeighbours(x,y,z)) do 
-		Uinteract = Uinteract + Current*self.Grid[Neighbour[1]][Neighbour[2]][Neighbour[3]]*U_Interaction_Amplitude;
+		Uinteract = Uinteract - Current*self.Grid[Neighbour[1]][Neighbour[2]][Neighbour[3]]*U_Interaction_Amplitude;
 	end
 
 	local Uint=U_intern(Current,self.Temperature);
 	Uint=-Current*self.ExternalField;
+	--print(Uinteract, Uint)
 	-- All terms are negative.
 	--print("state " .. Current .. " intern " .. Uint .. " interact " .. Uinteract)
 	--error('trace')
-	return (-Uinteract+Uint)*EnergyMultiplier--, Uinteract*EnergyMultiplier,Uint*EnergyMultiplier;
+	return (Uinteract+Uint)*EnergyMultiplier--, Uinteract*EnergyMultiplier,Uint*EnergyMultiplier;
 end 
 
 function Lattice:GetDeltaU(x,y,z,targ)
 	local UNew,UinteractNew,UintNew = self:GetEnergyAt(x,y,z,targ,true)
 	local UOld,UinteractOld,UintOld = self:GetEnergyAt(x,y,z,(targ and -targ),false)
+
 	local dU = UNew-UOld;
+	print(dU,self.Temperature)
 	return dU;
 	--[[local UNew,UinteractNew,UintNew = self:GetEnergyAt(x,y,z,targ,true)
 	local UOld,UinteractOld,UintOld = self:GetEnergyAt(x,y,z,(targ and -targ),false)

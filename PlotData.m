@@ -1,4 +1,5 @@
 function  PlotData( fname )
+close all;
 %Plot data from a lua-generated data file. The data file is generated with DataSet.lua
 %The format is as following: 
 % xlabel1 
@@ -39,7 +40,7 @@ for current_line = 1:size(C,1)
             linenum = linenum-0.5;
             
             data_ = strsplit(line, ',');
-            a= str2double(data_{2})
+           
             whos a
             data = [];
             length(data_)
@@ -54,7 +55,7 @@ for current_line = 1:size(C,1)
             
             if strcmp(target, 'x')
                 insert = size(data_plotx,1)+1;
-                data
+             
                 data_plotx = data;
             else
                 insert = size(data_plotx,1)+1;
