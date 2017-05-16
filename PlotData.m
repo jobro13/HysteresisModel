@@ -1,5 +1,6 @@
 function OUT = PlotData( fname )
-OUT = {};
+OUT = struct;
+cfield=1;
 
 %Plot data from a lua-generated data file. The data file is generated with DataSet.lua
 %The format is as following: 
@@ -62,7 +63,11 @@ for current_line = 1:size(C,1)
                 insert = size(data_plotx,1)+1;
 
                 plot(data_plotx, data,'*');
-               % OUT{end+1} = {x=data_plotx,y=data,legend=legendd};
+    
+                OUT(cfield).xdata = data_plotx;
+                OUT(cfield).ydata = data;
+                OUT(cfield).legend=legendd;
+                cfield=cfield+1;
                 hold on
                 %hist(data,data_plotx)
                 data_plotx=[];
