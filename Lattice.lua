@@ -1,5 +1,7 @@
 local Lattice = {}
 
+math.randomseed(os.time())
+
 Lattice.ExternalField=0; -- This is the external field strength.
 Lattice.J = 1;
 
@@ -135,8 +137,8 @@ function Lattice:GetEnergyAt(x,y,z,targ, flip)
 		Uinteract = Uinteract - Current*self.Grid[Neighbour[1]][Neighbour[2]][Neighbour[3]]*U_Interaction_Amplitude;
 	end
 
-	local Uint=U_intern(Current,self.Temperature);
-	Uint=Current*self.ExternalField;
+	--local Uint=U_intern(Current,self.Temperature);
+	Uint=-Current*self.ExternalField;
 	--print(Uinteract, Uint)
 	-- All terms are negative.
 	--print("state " .. Current .. " intern " .. Uint .. " interact " .. Uinteract)
