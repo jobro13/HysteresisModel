@@ -2,12 +2,95 @@ local Lattice = {}
 
 math.randomseed(os.time())
 
+local gd 
+
 Lattice.ExternalField=0; -- This is the external field strength.
 Lattice.J = 1;
 
 function Lattice:new()
-	return setmetatable({}, {__index=self})
+	return setmetatable({}, {__index=self,__gc=self.Destroy})
 end
+
+-- Call this function to finalize the lattice. Do this at end of a simulation, or when unloading the lattice.
+function Lattice:Destroy()
+	if self.HasLatticeFile then 
+		self.HasLatticeFile:flush()
+		self.HasLatticeFile:close()
+	end
+end 
+
+local function csvread(fname) 
+	local out = {};
+	for line in io.lines(fname) do 
+		local t = {};
+		table.insert(out,t)
+		for match in string.gmatch(line,"[^,%s]+") do 
+			table.insert(t,tonumber(match));
+		end 
+	end 
+	return out;
+end 
+
+function Lattice:ToAnim(latfile_in, gif_out,pxsize,zdepth)
+	if not gd then 
+		gd = assert(require 'gd', 'GD is not installed')
+	end 
+
+	local pxsize=pxsize or 1;
+
+	local data_in = csvread(latfile_in);
+	local sof = data_in[1];
+	local x,y,z = sof[1], sof[2], sof[3];
+
+	-- specify which layer.
+	local use_z = zdepth or 1;
+
+	local im = gd.create(x*pxsize,y*pxsize);
+
+	local sp_up_color = im:colorAllocate(0,0,0);
+	local sp_down_color = im:colorAllocate(255,255,255);
+
+	local fp = io.open(gif_out, "w")
+	fp:write(im:gifAnimBeginStr(true, 0))
+
+	local tscale = #data_in - 1;
+
+	local tim = gd.createPalette(x*pxsize,y*pxsize);
+  	tim:paletteCopy(im);
+
+	for i = 1, tscale do 
+		print(i/tscale)
+		local mydata = data_in[i+1];
+		local index = 0;
+		for tx = 1,x do
+			for ty = 1,y do 
+				for tz = 1,z do  
+					index=index+1;
+					if tz == use_z then
+						local spin = mydata[index];
+					--	print(spin)
+						local mycolor = ((spin == 1) and sp_up_color) or sp_down_color;
+						if pxsize == 1 then 
+							tim:setPixel(tx,ty,mycolor);
+						else 
+							for dx = tx*pxsize - pxsize + 1, (tx+1)*pxsize+pxsize-2 do 
+								for dy =  ty*pxsize - pxsize + 1,(ty+1)*pxsize+pxsize-2 do 
+									tim:setPixel(dx,dy,mycolor)
+								end 
+							end 
+						end
+					end 
+				end 
+			end 
+		end 
+  		fp:write(tim:gifAnimAddStr(false, 0, 0, 5, gd.DISPOSAL_NONE));
+	end 
+	fp:write(gd.gifAnimEndStr())
+	fp:close()
+end 
+
+Lattice:ToAnim('Lattice.lat', 'out_test.gif',2)
+
 
 function Lattice:GetRandomLatticeSite()
 	local xmax = self.x;
@@ -187,11 +270,12 @@ function Lattice:Dump(fname)
 	local fhandle
 	if not self.HasLatticeFile then 
 		-- open new file 
-		fhandle = io.open(fname, 'w')
+		self.HasLatticeFile = io.open(fname, 'w')
+		fhandle = self.HasLatticeFile
 		-- First row of Lattice is the size
 		fhandle:write(self.x .. ", " .. self.y .. ", "..  self.z .. "\n")
 	else
-		fhandle = io.open(fname, 'w+')
+		fhandle = self.HasLatticeFile;
 	end 
 
 	local out_t = {};
@@ -203,9 +287,9 @@ function Lattice:Dump(fname)
 		end 
 	end 
 
-	fhandle:write(table.concat(out_t, ", "))
-	fhandle:flush();
-	fhandle:close()
+	fhandle:write(table.concat(out_t, ", ").."\n")
+	--fhandle:flush();
+	--fhandle:close()
 end 
 
 function Lattice:GetU()
