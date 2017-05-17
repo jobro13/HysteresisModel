@@ -18,7 +18,10 @@ function Lattice:GetRandomLatticeSite()
 	return x,y,z 
 end 
 
+-- Well this actually works as a clear too... Ok then.
 function Lattice:init(x,y,z)
+	self.HasLatticeFile = false;
+
 	self.x = x;
 	self.y = y;
 	self.z = z;
@@ -177,6 +180,32 @@ function Lattice:GetDeltaU(x,y,z,targ)
 
 	return sum*Current*2 + self.ExternalField*Current;
 	--]=]
+end 
+
+-- Dump the lattice in the filename.
+function Lattice:Dump(fname) 
+	local fhandle
+	if not self.HasLatticeFile then 
+		-- open new file 
+		fhandle = io.open(fname, 'w')
+		-- First row of Lattice is the size
+		fhandle:write(self.x .. ", " .. self.y .. ", "..  self.z .. "\n")
+	else
+		fhandle = io.open(fname, 'w+')
+	end 
+
+	local out_t = {};
+	for x = 1, self.x do 
+		for y = 1, self.y do 
+			for z = 1,self.z do 
+				table.insert(out_t,self.Grid[x][y][z])
+			end 
+		end 
+	end 
+
+	fhandle:write(table.concat(out_t, ", "))
+	fhandle:flush();
+	fhandle:close()
 end 
 
 function Lattice:GetU()

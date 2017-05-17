@@ -1,5 +1,5 @@
 local TERM_HOME_STR = io.popen("tput home"):read();
-local SHOW = false;
+local SHOW = true;
 
 
 os.execute"tput clear"
@@ -9,7 +9,7 @@ Lattice = require 'Lattice'
 DataSet = require 'DataSet'
 
 MyLattice = Lattice:new();
-MyLattice:init(10,10,10);
+MyLattice:init(10,10,1);
 
 MyLattice.Temperature = 1;--100;
 
@@ -17,7 +17,7 @@ MyLattice.Temperature = 1;--100;
 
 MyModel = Model:new(MyLattice);
 -- Sweeps of whole lattice per step.
-MyModel.Sweeps = 10;
+MyModel.Sweeps = 100;
 
 MyModel.Callback = function(step, nsteps)
 --print(step/nsteps);
@@ -70,12 +70,14 @@ local function linspace(startn,num,endn)
 	return out
 end 
 
-local function runsim(tsteps)
+local function runsim(tsteps,nodata)
 
 	MyModel.TemperatureList = tsteps;
 	Out=MyModel:Run(tsteps);
-	table.insert(Results,Out)
-	table.insert(Results_T, tsteps)
+	if not nodata then 
+		table.insert(Results,Out)
+		table.insert(Results_T, tsteps)
+	end
 end 
 
 local function tjoin(t,t2)
@@ -114,11 +116,11 @@ if #FieldSweep2 ~= #TempSweep2 then
 end
 --]]
 
-local Field = 1
+local Field = 0
 local Num = 200;
 
-Tstart = 2.66;
-Tend = 2.72;
+Tstart = 0;
+Tend = 3;
 
 
 
@@ -126,6 +128,8 @@ local TempSweep1 = linspace(Tstart,Num,Tend);
 local TempSweep2 = linspace(Tend,Num,Tstart);
 local FieldSweep1 = linspace(Field, Num, -Field*1.25);
 local FieldSweep2 = linspace(-Field*1.25,Num,Field);
+
+--[[
 
 local TempSweep1 = linspace(0,Num,Tc+0.1);
 local TempSweep2 = linspace((Tc+0.1),Num,0)
@@ -144,11 +148,17 @@ tjoin(FieldSweep1, linspace(0,1,0))
 TempSweep2 = linspace(4, Num,4);
 -- -0.09 -0.11
 FieldSweep2 = linspace(-0.095, Num, -0.095)
-
+--]]
 local Inputs = {
 		{Temperature = TempSweep1; Field = FieldSweep1};
 		{Temperature = TempSweep2, Field = FieldSweep2}
 	}
+
+
+-- Setup lattice.
+
+runsim({Temperature = {0,0,0}, Field = {10000, 10000, 10000}}, true)
+
 
 for i = 1, sweeps do
 	for i,v in pairs(Inputs) do 
@@ -211,3 +221,5 @@ end
 --MyData:Add(Time, MTime, "Time",1)
 
 MyData:Write()
+
+MyLattice:Dump("Lattice.lat")
